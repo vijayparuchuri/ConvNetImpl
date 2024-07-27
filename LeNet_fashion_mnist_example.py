@@ -15,11 +15,11 @@ train_dataset = FashionMNIST(root='data', train=True, transform=ToTensor(), down
 test_dataset = FashionMNIST(root='data', train=False, transform=ToTensor(), download=True)
 
 
-train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
 
-test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
 
-model = LeNet(10)
+model = LeNet(10).to(device)
 
 print(model)
 
@@ -28,6 +28,7 @@ def train_loop(model, dataloader, loss_fn, optimizer):
     size = len(dataloader.dataset)
     
     for batch, (X, y) in enumerate(dataloader):
+        X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         pred = model(X)
         
         loss = loss_fn(pred, y)
@@ -48,6 +49,7 @@ def test_loop(model, dataloader, loss_fn):
     
     with torch.no_grad():
         for X, y in dataloader:
+            X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
             pred = model(X)
             
             test_loss+= loss_fn(pred, y).item()
